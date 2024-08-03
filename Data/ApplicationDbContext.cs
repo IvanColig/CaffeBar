@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using CaffeBar.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace CaffeBar.Data;
 
-public class ApplicationDbContext : IdentityDbContext
+public class CaffeBarDbContext : IdentityDbContext<ApplicationUser>
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    public CaffeBarDbContext(DbContextOptions<CaffeBarDbContext> options)
         : base(options)
     {
     }
