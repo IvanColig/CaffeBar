@@ -4,10 +4,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CaffeBar.Data;
 
-public class CaffeBarDbContext : IdentityDbContext<ApplicationUser>
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
-    public CaffeBarDbContext(DbContextOptions<CaffeBarDbContext> options)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
     }
+    public DbSet<Event> Events { get; set; }
+    public DbSet<MenuItem> MenuItems { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Table> Tables { get; set; }
+    public DbSet<Reservation> Reservations { get; set; }
+
 }

@@ -5,9 +5,9 @@ namespace CaffeBar.Services
 {
     public class MenuItemService : IMenuItemService
     {
-        private readonly CaffeBarDbContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public MenuItemService(CaffeBarDbContext context)
+        public MenuItemService(ApplicationDbContext context)
         {
             _context = context;
         }

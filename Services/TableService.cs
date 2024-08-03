@@ -6,9 +6,9 @@ namespace CaffeBar.Services
 {
     public class TableService : ITableService
     {
-        private readonly CaffeBarDbContext _context;
+        private readonly ApplicationDbContext _context;
         
-        public TableService(CaffeBarDbContext context)
+        public TableService(ApplicationDbContext context)
         {
             _context = context;
         }

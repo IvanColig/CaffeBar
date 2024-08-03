@@ -5,9 +5,9 @@ namespace CaffeBar.Services
 {
     public class OrderItemService : IOrderItemService
     {
-        private readonly CaffeBarDbContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public OrderItemService(CaffeBarDbContext context)
+        public OrderItemService(ApplicationDbContext context)
         {
             _context = context;
         }

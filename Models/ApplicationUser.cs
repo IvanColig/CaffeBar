@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Identity;
-
 namespace CaffeBar.Models
 {
     public class ApplicationUser : IdentityUser

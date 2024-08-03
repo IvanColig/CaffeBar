@@ -5,19 +5,19 @@ namespace CaffeBar.Services
 {
     public class ReservationService : IReservationService
     {
-        private readonly CaffeBarDbContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public ReservationService(CaffeBarDbContext context)
+        public ReservationService(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        public async Task<IEnumerable<Reservation?>> GetReservationsAsync()
+        public async Task<IEnumerable<Reservation>> GetReservationsAsync()
         {
             return await _context.Reservations.ToListAsync();
         }
 
-        public async Task<Reservation> GetReservationAsync(int id)
+        public async Task<Reservation?> GetReservationAsync(int id)
         {
             return await _context.Reservations.FindAsync(id);
         }
@@ -89,7 +89,7 @@ namespace CaffeBar.Services
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }

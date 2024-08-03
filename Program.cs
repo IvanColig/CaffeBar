@@ -2,22 +2,28 @@ global using Microsoft.EntityFrameworkCore;
 global using Microsoft.AspNetCore.Identity;
 global using Microsoft.AspNetCore.Authorization;
 using CaffeBar.Data;
-using Caffebar.Services;
 using CaffeBar.Models;
+using CaffeBar.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<CaffeBarDbContext>(options =>
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<CaffeBarDbContext>();
+    .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<Caffebar.Services.IEventService, Caffebar.Services.EventService>();
+builder.Services.AddScoped<IMenuItemService, MenuItemService>();
+builder.Services.AddScoped<IOrderItemService, OrderItemService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<Caffebar.Services.ITableService, TableService>();
+
 
 var app = builder.Build();
 

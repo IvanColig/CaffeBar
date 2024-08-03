@@ -5,9 +5,9 @@ namespace Caffebar.Services
 {
     public class EventService : IEventService
     {
-        private readonly CaffeBarDbContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public EventService(CaffeBarDbContext context)
+        public EventService(ApplicationDbContext context)
         {
             _context = context;
         }
