@@ -1,28 +1,24 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using CaffeBar.Data;
 using CaffeBar.Models;
+using CaffeBar.Services;
 
 namespace CaffeBar.Controllers
 {
     public class MenuItemController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IMenuItemService _menuItemService;
 
-        public MenuItemController(ApplicationDbContext context)
+        public MenuItemController(IMenuItemService menuItemService)
         {
-            _context = context;
+            _menuItemService = menuItemService;
         }
 
         // GET: MenuItem
         public async Task<IActionResult> Index()
         {
-            return View(await _context.MenuItems.ToListAsync());
+            var menuItems = await _menuItemService.GetMenuItems();
+            return View(menuItems);
         }
 
         // GET: MenuItem/Details/5
@@ -33,8 +29,7 @@ namespace CaffeBar.Controllers
                 return NotFound();
             }
 
-            var menuItem = await _context.MenuItems
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var menuItem = await _menuItemService.GetMenuItem(id.Value);
             if (menuItem == null)
             {
                 return NotFound();
@@ -50,17 +45,19 @@ namespace CaffeBar.Controllers
         }
 
         // POST: MenuItem/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Description,Price,Image")] MenuItem menuItem)
+        public async Task<IActionResult> Create([Bind("Id,Name,Description,Price")] MenuItem menuItem, IFormFile? Image)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(menuItem);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                menuItem.Image = Image;
+                bool isCreated = await _menuItemService.CreateMenuItem(menuItem);
+                if (isCreated)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                ModelState.AddModelError("", "Unable to create menu item.");
             }
             return View(menuItem);
         }
@@ -73,7 +70,7 @@ namespace CaffeBar.Controllers
                 return NotFound();
             }
 
-            var menuItem = await _context.MenuItems.FindAsync(id);
+            var menuItem = await _menuItemService.GetMenuItem(id.Value);
             if (menuItem == null)
             {
                 return NotFound();
@@ -82,11 +79,9 @@ namespace CaffeBar.Controllers
         }
 
         // POST: MenuItem/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,Image")] MenuItem menuItem)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,ImagePath")] MenuItem menuItem, IFormFile? Image)
         {
             if (id != menuItem.Id)
             {
@@ -95,23 +90,13 @@ namespace CaffeBar.Controllers
 
             if (ModelState.IsValid)
             {
-                try
+                menuItem.Image = Image;
+                bool isUpdated = await _menuItemService.UpdateMenuItem(menuItem);
+                if (isUpdated)
                 {
-                    _context.Update(menuItem);
-                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!MenuItemExists(menuItem.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                ModelState.AddModelError("", "Unable to update menu item.");
             }
             return View(menuItem);
         }
@@ -124,8 +109,7 @@ namespace CaffeBar.Controllers
                 return NotFound();
             }
 
-            var menuItem = await _context.MenuItems
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var menuItem = await _menuItemService.GetMenuItem(id.Value);
             if (menuItem == null)
             {
                 return NotFound();
@@ -139,19 +123,13 @@ namespace CaffeBar.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var menuItem = await _context.MenuItems.FindAsync(id);
-            if (menuItem != null)
+            bool isDeleted = await _menuItemService.DeleteMenuItem(id);
+            if (isDeleted)
             {
-                _context.MenuItems.Remove(menuItem);
+                return RedirectToAction(nameof(Index));
             }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool MenuItemExists(int id)
-        {
-            return _context.MenuItems.Any(e => e.Id == id);
+            ModelState.AddModelError("", "Unable to delete menu item.");
+            return RedirectToAction(nameof(Delete), new { id });
         }
     }
 }

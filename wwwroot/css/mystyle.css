@@ -1,0 +1,88 @@
+body {
+    background: radial-gradient(circle, #5f4e4a, #36312d);
+}
+
+.footer-clr {
+    background: linear-gradient(to bottom, #342c27, #000000 );
+}
+
+.home-logo{
+    width: 20%;
+    height: auto;
+    margin: 0 auto;
+    display: block;
+}
+
+.home-header {
+    text-align: center;
+}
+
+.home-header h3 {
+    color: #aaa6a6;
+}
+
+.form-clr {
+    color: #aaa6a6;
+}
+
+/* Stil za cijeli container menija */
+.menu-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* Stil za pojedinačne stavke menija */
+.menu-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 250px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #aba1a1;
+    text-align: center;
+    padding: 15px;
+}
+
+/* Stil za slike stavki menija */
+.menu-item-image {
+    width: 100%;
+    height: 180px; /* Postavite željenu visinu */
+    overflow: hidden;
+    border-bottom: 1px solid #ddd;
+}
+
+.menu-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Očuva proporcije slike i popunjava okvir */
+}
+
+/* Stil za detalje stavki menija */
+.menu-item-details {
+    padding: 10px;
+}
+
+/* Stil za naziv stavke menija */
+.menu-item-name {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin: 10px 0;
+    color: #333;
+}
+
+
+/* Stil za cijenu stavke menija */
+.menu-item-price {
+    font-size: 1.125rem;
+    font-weight: bold;
+    color: #333;
+    margin: 10px 0;
+}
+
+/* Stil za akcijske dugmadi */
+.menu-item-actions a {
+    display: inline-block;
+    margin: 5px;
+}
