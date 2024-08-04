@@ -4,7 +4,7 @@ namespace CaffeBar.Models
     {
         public int Id { get; set; }
         public int TableId { get; set; }
-        public string? IdentityUserId { get; set; }
-	    public ApplicationUser? IdentityUser { get; set; }
+        public required string IdentityUserId { get; set; }
+	    public required ApplicationUser IdentityUser { get; set; }
     }
 }
