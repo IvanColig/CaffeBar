@@ -1,28 +1,24 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using CaffeBar.Data;
+using Microsoft.AspNetCore.Http;
 using CaffeBar.Models;
+using Caffebar.Services;
 
 namespace CaffeBar.Controllers
 {
     public class EventController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IEventService _eventService;
 
-        public EventController(ApplicationDbContext context)
+        public EventController(IEventService eventService)
         {
-            _context = context;
+            _eventService = eventService;
         }
 
         // GET: Event
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Events.ToListAsync());
+            var events = await _eventService.GetEventsAsync();
+            return View(events);
         }
 
         // GET: Event/Details/5
@@ -33,14 +29,13 @@ namespace CaffeBar.Controllers
                 return NotFound();
             }
 
-            var @event = await _context.Events
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (@event == null)
+            var eventItem = await _eventService.GetEventAsync(id.Value);
+            if (eventItem == null)
             {
                 return NotFound();
             }
 
-            return View(@event);
+            return View(eventItem);
         }
 
         // GET: Event/Create
@@ -50,19 +45,22 @@ namespace CaffeBar.Controllers
         }
 
         // POST: Event/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Description,Date,Image")] Event @event)
+        public async Task<IActionResult> Create([Bind("Title,Description,Date")] Event eventItem, IFormFile? Image)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(@event);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                // Assign image file to event
+                eventItem.Image = Image;
+                bool isCreated = await _eventService.CreateEventAsync(eventItem);
+                if (isCreated)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                ModelState.AddModelError("", "Unable to create event.");
             }
-            return View(@event);
+            return View(eventItem);
         }
 
         // GET: Event/Edit/5
@@ -73,47 +71,52 @@ namespace CaffeBar.Controllers
                 return NotFound();
             }
 
-            var @event = await _context.Events.FindAsync(id);
-            if (@event == null)
+            var eventItem = await _eventService.GetEventAsync(id.Value);
+            if (eventItem == null)
             {
                 return NotFound();
             }
-            return View(@event);
+            return View(eventItem);
         }
 
         // POST: Event/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Date,Image")] Event @event)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Date,ImagePath")] Event eventItem, IFormFile? Image)
         {
-            if (id != @event.Id)
+            if (id != eventItem.Id)
             {
                 return NotFound();
             }
 
             if (ModelState.IsValid)
             {
-                try
+                // Create a new instance of Event for update with the image
+                var updatedEvent = await _eventService.GetEventAsync(id);
+                if (updatedEvent == null)
                 {
-                    _context.Update(@event);
-                    await _context.SaveChangesAsync();
+                    return NotFound();
                 }
-                catch (DbUpdateConcurrencyException)
+
+                // Update properties
+                updatedEvent.Title = eventItem.Title;
+                updatedEvent.Description = eventItem.Description;
+                updatedEvent.Date = eventItem.Date;
+
+                // Handle image update
+                if (Image != null)
                 {
-                    if (!EventExists(@event.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    updatedEvent.Image = Image;
                 }
-                return RedirectToAction(nameof(Index));
+
+                bool isUpdated = await _eventService.UpdateEventAsync(updatedEvent);
+                if (isUpdated)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                ModelState.AddModelError("", "Unable to update event.");
             }
-            return View(@event);
+            return View(eventItem);
         }
 
         // GET: Event/Delete/5
@@ -124,14 +127,13 @@ namespace CaffeBar.Controllers
                 return NotFound();
             }
 
-            var @event = await _context.Events
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (@event == null)
+            var eventItem = await _eventService.GetEventAsync(id.Value);
+            if (eventItem == null)
             {
                 return NotFound();
             }
 
-            return View(@event);
+            return View(eventItem);
         }
 
         // POST: Event/Delete/5
@@ -139,19 +141,13 @@ namespace CaffeBar.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var @event = await _context.Events.FindAsync(id);
-            if (@event != null)
+            bool isDeleted = await _eventService.DeleteEventAsync(id);
+            if (isDeleted)
             {
-                _context.Events.Remove(@event);
+                return RedirectToAction(nameof(Index));
             }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool EventExists(int id)
-        {
-            return _context.Events.Any(e => e.Id == id);
+            ModelState.AddModelError("", "Unable to delete event.");
+            return RedirectToAction(nameof(Delete), new { id });
         }
     }
 }

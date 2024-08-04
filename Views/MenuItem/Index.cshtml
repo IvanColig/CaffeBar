@@ -11,26 +11,22 @@
 </p>
 
 <div class="menu-container">
-@foreach (var item in Model) {
-    <div class="menu-item">
-        <div class="menu-item-image">
-            @if (!string.IsNullOrEmpty(item.ImagePath))
-            {
-                <img src="@item.ImagePath" alt="@item.Name" class="img-thumbnail" />
-            }
-            else
-            {
-                <img src="/images/replacement.png" class="img-thumbnail" />
-            }
-        </div>
-        <div class="menu-item-details">
-            <h3 class="menu-item-name">@item.Name</h3>
-            <p class="menu-item-price">@item.PriceHuman</p>
-            <div class="menu-item-actions">
-                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-secondary">Edit</a>
-                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger">Delete</a>
+    @foreach (var item in Model) {
+        <div class="menu-item">
+            <div class="menu-item-image">
+                @if (!string.IsNullOrEmpty(item.ImagePath))
+                {
+                    <img src="@item.ImagePath" alt="@item.Name" class="img-thumbnail" />
+                }
+                else
+                {
+                    <img src="/images/replacement.png" class="img-thumbnail" />
+                }
+            </div>
+            <div class="menu-item-details">
+                <h3 class="menu-item-name">@item.Name</h3>
+                <p class="menu-item-price">@item.PriceHuman</p>
             </div>
         </div>
-    </div>
-}
+    }
 </div>

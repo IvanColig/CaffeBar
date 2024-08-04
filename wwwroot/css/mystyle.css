@@ -6,7 +6,7 @@ body {
     background: linear-gradient(to bottom, #342c27, #000000 );
 }
 
-.home-logo{
+.home-logo {
     width: 20%;
     height: auto;
     margin: 0 auto;
@@ -31,14 +31,17 @@ body {
     flex-wrap: wrap;
     gap: 20px;
     padding: 20px;
+    justify-content: flex-start; /* Kartice počinju s lijeve strane i idu prema desno */
+    flex-direction: row; /* Dodavanje novih kartica s lijeva na desno */
 }
 
 /* Stil za pojedinačne stavke menija */
 .menu-item {
+    flex: 1 1 calc(20% - 20px); /* 20% širine minus razmak */
+    max-width: calc(20% - 20px); /* Osigurava da kartice ne prelaze 20% širine */
     border: 1px solid #ddd;
     border-radius: 8px;
     overflow: hidden;
-    width: 250px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     background-color: #aba1a1;
     text-align: center;
@@ -71,7 +74,6 @@ body {
     margin: 10px 0;
     color: #333;
 }
-
 
 /* Stil za cijenu stavke menija */
 .menu-item-price {
