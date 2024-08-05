@@ -39,6 +39,7 @@ namespace CaffeBar.Controllers
         }
 
         // GET: Event/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
@@ -47,6 +48,7 @@ namespace CaffeBar.Controllers
         // POST: Event/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("Title,Description,Date")] Event eventItem, IFormFile? Image)
         {
             if (ModelState.IsValid)
@@ -64,6 +66,7 @@ namespace CaffeBar.Controllers
         }
 
         // GET: Event/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -82,6 +85,7 @@ namespace CaffeBar.Controllers
         // POST: Event/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Date,ImagePath")] Event eventItem, IFormFile? Image)
         {
             if (id != eventItem.Id)
@@ -120,6 +124,7 @@ namespace CaffeBar.Controllers
         }
 
         // GET: Event/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -139,6 +144,7 @@ namespace CaffeBar.Controllers
         // POST: Event/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             bool isDeleted = await _eventService.DeleteEventAsync(id);
