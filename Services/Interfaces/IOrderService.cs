@@ -1,4 +1,5 @@
 using CaffeBar.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CaffeBar.Services
 {
@@ -9,5 +10,6 @@ namespace CaffeBar.Services
         Task<bool> CreateOrderAsync(Order newOrder);
         Task<bool> UpdateOrderAsync(Order updatedOrder);
         Task<bool> DeleteOrderAsync(int id);
+        Task<IEnumerable<SelectListItem>> GetTableOptionsAsync();
     }
 }

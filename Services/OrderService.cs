@@ -1,16 +1,42 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using CaffeBar.Data;
 using CaffeBar.Models;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace CaffeBar.Services
 {
     public class OrderService : IOrderService
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private string? _userId;
 
-        public OrderService(ApplicationDbContext context)
+        public OrderService(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _userManager = userManager;
+            _httpContextAccessor = httpContextAccessor;
         }
+
+        private async Task EnsureUserIdAsync()
+{
+    if (_userId == null)
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+
+        if (httpContext != null && httpContext.User != null)
+        {
+            var user = await _userManager.GetUserAsync(httpContext.User);
+            _userId = user?.Id;
+        }
+    }
+}
+
 
         public async Task<IEnumerable<Order>> GetOrdersAsync()
         {
@@ -19,25 +45,28 @@ namespace CaffeBar.Services
 
         public async Task<Order?> GetOrderAsync(int id)
         {
+            await EnsureUserIdAsync();
             return await _context.Orders
                 .Include(o => o.OrderItems)
-                .FirstOrDefaultAsync(o => o.Id == id);
+                .FirstOrDefaultAsync(o => o.Id == id && o.IdentityUserId == _userId);
         }
 
         public async Task<bool> CreateOrderAsync(Order newOrder)
         {
             if (newOrder == null ||
-                newOrder.Id > 0 ||
                 newOrder.OrderItems == null ||
                 newOrder.OrderItems.Count == 0 ||
-                newOrder.TableId <= 0 ||
-                newOrder.IdentityUserId == null)
+                newOrder.TableId <= 0)
             {
                 return false;
             }
 
             try
             {
+                await EnsureUserIdAsync();
+                if (_userId == null) return false;
+
+                newOrder.IdentityUserId = _userId;
                 _context.Orders.Add(newOrder);
                 await _context.SaveChangesAsync();
                 return true;
@@ -54,8 +83,13 @@ namespace CaffeBar.Services
                 updatedOrder.Id <= 0 ||
                 updatedOrder.OrderItems == null ||
                 updatedOrder.OrderItems.Count == 0 ||
-                updatedOrder.TableId <= 0 ||
-                updatedOrder.IdentityUserId == null)
+                updatedOrder.TableId <= 0)
+            {
+                return false;
+            }
+
+            await EnsureUserIdAsync();
+            if (updatedOrder.IdentityUserId != _userId)
             {
                 return false;
             }
@@ -74,7 +108,9 @@ namespace CaffeBar.Services
 
         public async Task<bool> DeleteOrderAsync(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
+            await EnsureUserIdAsync();
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.Id == id && o.IdentityUserId == _userId);
 
             if (order == null)
             {
@@ -91,6 +127,17 @@ namespace CaffeBar.Services
             {
                 return false;
             }
+        }
+
+        public async Task<IEnumerable<SelectListItem>> GetTableOptionsAsync()
+        {
+            return await _context.Tables
+                .Select(t => new SelectListItem
+                {
+                    Value = t.Id.ToString(),
+                    Text = t.Id.ToString()
+                })
+                .ToListAsync();
         }
     }
 }

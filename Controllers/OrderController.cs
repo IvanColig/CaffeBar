@@ -1,29 +1,30 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using CaffeBar.Data;
+using CaffeBar.Services;
 using CaffeBar.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CaffeBar.Controllers
 {
+    [Authorize]
     public class OrderController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IOrderService _orderService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public OrderController(ApplicationDbContext context)
+        public OrderController(IOrderService orderService, UserManager<ApplicationUser> userManager)
         {
-            _context = context;
+            _orderService = orderService;
+            _userManager = userManager;
         }
 
         // GET: Order
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Orders.Include(o => o.IdentityUser);
-            return View(await applicationDbContext.ToListAsync());
+            var orders = await _orderService.GetOrdersAsync();
+            return View(orders);
         }
 
         // GET: Order/Details/5
@@ -34,9 +35,7 @@ namespace CaffeBar.Controllers
                 return NotFound();
             }
 
-            var order = await _context.Orders
-                .Include(o => o.IdentityUser)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var order = await _orderService.GetOrderAsync(id.Value);
             if (order == null)
             {
                 return NotFound();
@@ -46,26 +45,28 @@ namespace CaffeBar.Controllers
         }
 
         // GET: Order/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["TableOptions"] = new SelectList(await _orderService.GetTableOptionsAsync(), "Value", "Text");
             return View();
         }
 
         // POST: Order/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,IdentityUserId,TableId")] Order order)
+        public async Task<IActionResult> Create([Bind("Id,TableId")] Order order)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(order);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                var result = await _orderService.CreateOrderAsync(order);
+                if (result)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                ModelState.AddModelError(string.Empty, "Order creation failed.");
             }
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id", order.IdentityUserId);
+
+            ViewData["TableOptions"] = new SelectList(await _orderService.GetTableOptionsAsync(), "Value", "Text");
             return View(order);
         }
 
@@ -77,18 +78,17 @@ namespace CaffeBar.Controllers
                 return NotFound();
             }
 
-            var order = await _context.Orders.FindAsync(id);
+            var order = await _orderService.GetOrderAsync(id.Value);
             if (order == null)
             {
                 return NotFound();
             }
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id", order.IdentityUserId);
+
+            ViewData["TableOptions"] = new SelectList(await _orderService.GetTableOptionsAsync(), "Value", "Text");
             return View(order);
         }
 
         // POST: Order/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,IdentityUserId,TableId")] Order order)
@@ -100,25 +100,15 @@ namespace CaffeBar.Controllers
 
             if (ModelState.IsValid)
             {
-                try
+                var result = await _orderService.UpdateOrderAsync(order);
+                if (result)
                 {
-                    _context.Update(order);
-                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!OrderExists(order.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                ModelState.AddModelError(string.Empty, "Order update failed.");
             }
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id", order.IdentityUserId);
+
+            ViewData["TableOptions"] = new SelectList(await _orderService.GetTableOptionsAsync(), "Value", "Text");
             return View(order);
         }
 
@@ -130,9 +120,7 @@ namespace CaffeBar.Controllers
                 return NotFound();
             }
 
-            var order = await _context.Orders
-                .Include(o => o.IdentityUser)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var order = await _orderService.GetOrderAsync(id.Value);
             if (order == null)
             {
                 return NotFound();
@@ -146,19 +134,12 @@ namespace CaffeBar.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
-            if (order != null)
+            var result = await _orderService.DeleteOrderAsync(id);
+            if (result)
             {
-                _context.Orders.Remove(order);
+                return RedirectToAction(nameof(Index));
             }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool OrderExists(int id)
-        {
-            return _context.Orders.Any(e => e.Id == id);
+            return View();
         }
     }
 }

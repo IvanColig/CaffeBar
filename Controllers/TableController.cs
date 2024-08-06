@@ -10,6 +10,7 @@ using CaffeBar.Models;
 
 namespace CaffeBar.Controllers
 {
+    [Authorize(Roles="Admin")]
     public class TableController : Controller
     {
         private readonly ApplicationDbContext _context;
