@@ -12,61 +12,39 @@ namespace CaffeBar.Services
     public class OrderService : IOrderService
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private string? _userId;
 
-        public OrderService(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IHttpContextAccessor httpContextAccessor)
+        public OrderService(ApplicationDbContext context)
         {
             _context = context;
-            _userManager = userManager;
-            _httpContextAccessor = httpContextAccessor;
         }
-
-        private async Task EnsureUserIdAsync()
-{
-    if (_userId == null)
-    {
-        var httpContext = _httpContextAccessor.HttpContext;
-
-        if (httpContext != null && httpContext.User != null)
-        {
-            var user = await _userManager.GetUserAsync(httpContext.User);
-            _userId = user?.Id;
-        }
-    }
-}
-
 
         public async Task<IEnumerable<Order>> GetOrdersAsync()
         {
             return await _context.Orders.Include(o => o.OrderItems).ToListAsync();
         }
 
-        public async Task<Order?> GetOrderAsync(int id)
+        public async Task<Order?> GetOrderAsync(int id, string userId)
         {
-            await EnsureUserIdAsync();
             return await _context.Orders
                 .Include(o => o.OrderItems)
-                .FirstOrDefaultAsync(o => o.Id == id && o.IdentityUserId == _userId);
+                .FirstOrDefaultAsync(o => o.Id == id && o.IdentityUserId == userId);
         }
 
-        public async Task<bool> CreateOrderAsync(Order newOrder)
+        public async Task<bool> CreateOrderAsync(Order newOrder, string userId)
         {
+            newOrder.IdentityUserId = userId;
+
             if (newOrder == null ||
                 newOrder.OrderItems == null ||
                 newOrder.OrderItems.Count == 0 ||
-                newOrder.TableId <= 0)
+                newOrder.TableId <= 0 ||
+                newOrder.IdentityUserId == null)
             {
                 return false;
             }
 
             try
             {
-                await EnsureUserIdAsync();
-                if (_userId == null) return false;
-
-                newOrder.IdentityUserId = _userId;
                 _context.Orders.Add(newOrder);
                 await _context.SaveChangesAsync();
                 return true;
@@ -77,7 +55,7 @@ namespace CaffeBar.Services
             }
         }
 
-        public async Task<bool> UpdateOrderAsync(Order updatedOrder)
+        public async Task<bool> UpdateOrderAsync(Order updatedOrder, string userId)
         {
             if (updatedOrder == null ||
                 updatedOrder.Id <= 0 ||
@@ -88,15 +66,18 @@ namespace CaffeBar.Services
                 return false;
             }
 
-            await EnsureUserIdAsync();
-            if (updatedOrder.IdentityUserId != _userId)
+            var existingOrder = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == updatedOrder.Id && o.IdentityUserId == userId);
+
+            if (existingOrder == null)
             {
                 return false;
             }
 
-            try
+             try
             {
-                _context.Orders.Update(updatedOrder);
+                _context.Entry(existingOrder).CurrentValues.SetValues(updatedOrder);
                 await _context.SaveChangesAsync();
                 return true;
             }
@@ -106,11 +87,10 @@ namespace CaffeBar.Services
             }
         }
 
-        public async Task<bool> DeleteOrderAsync(int id)
+        public async Task<bool> DeleteOrderAsync(int id, string userId)
         {
-            await EnsureUserIdAsync();
             var order = await _context.Orders
-                .FirstOrDefaultAsync(o => o.Id == id && o.IdentityUserId == _userId);
+                .FirstOrDefaultAsync(o => o.Id == id && o.IdentityUserId == userId);
 
             if (order == null)
             {
@@ -136,6 +116,17 @@ namespace CaffeBar.Services
                 {
                     Value = t.Id.ToString(),
                     Text = t.Id.ToString()
+                })
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<SelectListItem>> GetMenuItemOptionsAsync()
+        {
+            return await _context.MenuItems
+                .Select(m => new SelectListItem
+                {
+                    Value = m.Id.ToString(),
+                    Text = m.Name
                 })
                 .ToListAsync();
         }

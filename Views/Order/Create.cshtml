@@ -2,19 +2,24 @@
 
 @{
     ViewData["Title"] = "Create";
+    var user = ViewData["User"] as ApplicationUser;
 }
 
-<h1>Create Order</h1>
+<h1 class="form-clr">Create Order</h1>
 
-<h4>Order</h4>
-<hr />
-<div class="row">
+<h4 class="form-clr">Order</h4>
+<hr/>
+<div class="row form-clr">
     <div class="col-md-4">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="TableId" class="control-label"></label>
+                <label>User:<p style="color: aliceblue;">@user.Name</p></label>
+                <br>
+                <label>Table:</label>
                 <select asp-for="TableId" class="form-control" asp-items="ViewBag.TableOptions"></select>
+                <label>Item</label>
+                <select name="selectedMenuItems" class="form-control" asp-items="ViewBag.MenuItems"></select>
                 <span asp-validation-for="TableId" class="text-danger"></span>
             </div>
             <br>
