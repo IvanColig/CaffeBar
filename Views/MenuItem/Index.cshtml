@@ -2,12 +2,16 @@
 
 @{
     ViewData["Title"] = "Menu";
+    var isAdmin = ViewBag.IsAdmin as bool? ?? false;
 }
 
-<h1 style="color: black;">@ViewData["Title"]</h1>
+<h1 class="form-clr">@ViewData["Title"]</h1>
 
 <p>
-    <a asp-action="Create" class="btn btn-primary">Add New Item</a>
+    @if (isAdmin)
+    {
+        <a asp-action="Create" class="btn btn-primary">Add New Item</a>
+    }
 </p>
 
 <div class="menu-container">
@@ -26,7 +30,15 @@
             <div class="menu-item-details">
                 <h3 class="menu-item-name">@item.Name</h3>
                 <p class="menu-item-price">@item.PriceHuman</p>
-                <a class="btn btn-primary" data-id="@item.Id">Add</a>
+                @if(!isAdmin)
+                {
+                    <a class="btn btn-primary" data-id="@item.Id">Add</a>
+                }
+                @if (isAdmin)
+                {
+                    <a class="btn btn-secondary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                    <a class="btn btn-danger" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                }   
             </div>
         </div>
     }

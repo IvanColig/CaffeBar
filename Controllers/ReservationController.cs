@@ -7,36 +7,46 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CaffeBar.Data;
 using CaffeBar.Models;
+using CaffeBar.Services;
+using Microsoft.AspNetCore.Identity;
 
 namespace CaffeBar.Controllers
 {
     public class ReservationController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IReservationService _reservationService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public ReservationController(ApplicationDbContext context)
+        public ReservationController(IReservationService reservationService, UserManager<ApplicationUser> userManager)
         {
-            _context = context;
+            _reservationService = reservationService;
+            _userManager = userManager;
+        }
+
+        private async Task<string?> GetUserIdAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            return user?.Id;
         }
 
         // GET: Reservation
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Reservations.Include(r => r.IdentityUser);
-            return View(await applicationDbContext.ToListAsync());
+            var reservations = await _reservationService.GetReservationsAsync();
+            return View(reservations);
         }
 
         // GET: Reservation/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
+            var userId = await GetUserIdAsync();
+
+            if (userId == null || id == null)
             {
                 return NotFound();
             }
 
-            var reservation = await _context.Reservations
-                .Include(r => r.IdentityUser)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var reservation = await _reservationService.GetReservationAsync(id.Value, userId);
             if (reservation == null)
             {
                 return NotFound();
@@ -46,119 +56,118 @@ namespace CaffeBar.Controllers
         }
 
         // GET: Reservation/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id");
+            var user = await GetUserIdAsync();
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            ViewData["User"] = await _userManager.GetUserAsync(User);;
+            ViewData["TableOptions"] = new SelectList(await _reservationService.GetTableOptionsAsync(), "Value", "Text");
             return View();
         }
 
         // POST: Reservation/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,TableId,IdentityUserId")] Reservation reservation)
+        public async Task<IActionResult> Create([Bind("TableId,Date,Time")] Reservation reservation)
         {
+            var userId = await GetUserIdAsync();
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
             if (ModelState.IsValid)
             {
-                _context.Add(reservation);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                reservation.IdentityUserId = userId;
+                var result = await _reservationService.CreateReservationAsync(reservation, userId);
+                if (result)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                ModelState.AddModelError(string.Empty, "Unable to create reservation. Please try again.");
             }
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id", reservation.IdentityUserId);
+
+            ViewData["User"] = await _userManager.GetUserAsync(User);
+            ViewData["TableOptions"] = new SelectList(await _reservationService.GetTableOptionsAsync(), "Value", "Text");
             return View(reservation);
         }
+
 
         // GET: Reservation/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
+            var userId = await GetUserIdAsync();
+
+            if (userId == null || id == null)
             {
                 return NotFound();
             }
 
-            var reservation = await _context.Reservations.FindAsync(id);
+            var reservation = await _reservationService.GetReservationAsync(id.Value, userId);
             if (reservation == null)
             {
                 return NotFound();
             }
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id", reservation.IdentityUserId);
+
+            ViewData["User"] = await _userManager.GetUserAsync(User);;
+            ViewData["TableOptions"] = new SelectList(await _reservationService.GetTableOptionsAsync(), "Value", "Text");
+
             return View(reservation);
         }
 
         // POST: Reservation/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,TableId,IdentityUserId")] Reservation reservation)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,TableId,Date,Time")] Reservation reservation)
         {
-            if (id != reservation.Id)
+            var userId = await GetUserIdAsync();
+
+            if (userId == null || id != reservation.Id)
             {
                 return NotFound();
             }
 
             if (ModelState.IsValid)
             {
-                try
+                reservation.IdentityUserId = userId;
+                var result = await _reservationService.UpdateReservationAsync(reservation, userId);
+                if (result)
                 {
-                    _context.Update(reservation);
-                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ReservationExists(reservation.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                ModelState.AddModelError(string.Empty, "Unable to update reservation. Please try again.");
             }
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id", reservation.IdentityUserId);
+
+            ViewData["User"] = await _userManager.GetUserAsync(User);
+            ViewData["TableOptions"] = new SelectList(await _reservationService.GetTableOptionsAsync(), "Value", "Text");
             return View(reservation);
         }
 
-        // GET: Reservation/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var reservation = await _context.Reservations
-                .Include(r => r.IdentityUser)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (reservation == null)
-            {
-                return NotFound();
-            }
-
-            return View(reservation);
-        }
 
         // POST: Reservation/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var reservation = await _context.Reservations.FindAsync(id);
-            if (reservation != null)
+            var userId = await GetUserIdAsync();
+
+            if (userId == null)
             {
-                _context.Reservations.Remove(reservation);
+                return Unauthorized();
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
+            var result = await _reservationService.DeleteReservationAsync(id, userId);
+            if (result)
+            {
+                return RedirectToAction(nameof(Index));
+            }
 
-        private bool ReservationExists(int id)
-        {
-            return _context.Reservations.Any(e => e.Id == id);
+            return NotFound();
         }
     }
 }

@@ -2,38 +2,46 @@
 
 @{
     ViewData["Title"] = "Events";
+    var isAdmin = ViewBag.IsAdmin as bool? ?? false;
 }
 
-<h1 style="color: black;">Events</h1>
+<h1 class="form-clr">Events</h1>
 
 <p>
-    <a asp-action="Create" class="btn btn-primary mb-3">Create New Event</a>
+    @if (isAdmin)
+    {
+        <a asp-action="Create" class="btn btn-primary">Add New Event</a>
+    }
 </p>
 
 <div class="row">
     @foreach (var item in Model) 
     {
         <div class="col-md-6 mb-4">
-            <a asp-action="Details" asp-route-id="@item.Id" class="text-decoration-none text-dark">
-                <div class="card h-100">
+            <div class="card h-100">
+                <a asp-action="Details" asp-route-id="@item.Id" class="text-decoration-none text-dark">
                     @if (!string.IsNullOrEmpty(item.ImagePath))
                     {
                         <img class="card-img-top" src="@item.ImagePath" alt="Event Image" style="max-height: 200px; object-fit: cover;">
                     }
                     else
                     {
-                        <img class="card-img-top" src="~/images/placeholder.png" alt="No Image" style="max-height: 200px; object-fit: cover;">
+                        <img class="card-img-top" src="~/images/eventsbg.jpg" alt="No Image" style="max-height: 200px; object-fit: cover;">
                     }
-                    <div class="card-body">
-                        <h5 class="card-title">@item.Title</h5>
-                        <p class="card-text">@item.Description</p>
-                        <p class="card-text"><small class="text-muted">@item.Date.ToString("dd MMM yyyy")</small></p>
-                    </div>
-                    <div class="card-footer">
-                        <span class="stretched-link"></span>
-                    </div>
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title">@item.Title</h5>
+                    <p class="card-text">@item.Description</p>
+                    <p class="card-text"><small class="text-muted">@item.Date.ToString("dd MMM yyyy")</small></p>
                 </div>
-            </a>
+                <div class="card-footer">
+                    @if (isAdmin)
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger">Delete</a>
+                    }
+                </div>
+            </div>
         </div>
     }
 </div>

@@ -8,16 +8,23 @@ namespace CaffeBar.Controllers
     public class EventController : Controller
     {
         private readonly IEventService _eventService;
-
-        public EventController(IEventService eventService)
+        private readonly UserManager<ApplicationUser> _usermanager;
+        
+        public EventController(IEventService eventService, UserManager<ApplicationUser> usermanager)
         {
+            _usermanager = usermanager;
             _eventService = eventService;
         }
 
         // GET: Event
         public async Task<IActionResult> Index()
         {
+            var user = await _usermanager.GetUserAsync(User);
+            var isAdmin = User.IsInRole("Admin");
+
             var events = await _eventService.GetEventsAsync();
+
+            ViewBag.IsAdmin = isAdmin;
             return View(events);
         }
 

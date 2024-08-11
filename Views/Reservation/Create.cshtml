@@ -2,25 +2,52 @@
 
 @{
     ViewData["Title"] = "Create";
+    var user = ViewData["User"] as ApplicationUser;
 }
 
-<h1>Create</h1>
+<h1 class="form-clr">Create Reservation</h1>
 
-<h4>Reservation</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
+<hr class="form-clr"/>
+<div class="row form-clr">
+    <div class="col-md-6">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
             <div class="form-group">
-                <label asp-for="TableId" class="control-label"></label>
-                <input asp-for="TableId" class="form-control" />
+                <label>User:</label>
+                <p class="text-light">@user?.Name @user?.Surname</p>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="Date">Date:</label>
+                <input asp-for="Date" class="form-control w-50" type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Time">Time:</label>
+                <select asp-for="Time" class="form-control w-50" required>
+                    @for (var hour = 10; hour <= 23; hour++)
+                    {
+                        for (var minute = 0; minute < 60; minute += 30)
+                        {
+                            var time = new TimeSpan(hour, minute, 0);
+                            if (time <= new TimeSpan(23, 0, 0))
+                            {
+                                <option value="@time">@time.ToString(@"hh\:mm")</option>
+                            }
+                        }
+                    }
+                </select>
+                <span asp-validation-for="Time" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="TableId">Table:</label>
+                <select asp-for="TableId" class="form-control w-50" asp-items="ViewBag.TableOptions"></select>
                 <span asp-validation-for="TableId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="IdentityUserId" class="control-label"></label>
-                <select asp-for="IdentityUserId" class ="form-control" asp-items="ViewBag.IdentityUserId"></select>
-            </div>
+            </div><br>
+            
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>

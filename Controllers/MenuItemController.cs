@@ -8,16 +8,23 @@ namespace CaffeBar.Controllers
     public class MenuItemController : Controller
     {
         private readonly IMenuItemService _menuItemService;
+        private readonly UserManager<ApplicationUser> _usermanager;
 
-        public MenuItemController(IMenuItemService menuItemService)
+        public MenuItemController(IMenuItemService menuItemService, UserManager<ApplicationUser> usermanager)
         {
             _menuItemService = menuItemService;
+            _usermanager = usermanager;
         }
 
         // GET: MenuItem
         public async Task<IActionResult> Index()
         {
+            var user = await _usermanager.GetUserAsync(User);
+            var isAdmin = User.IsInRole("Admin");
+
             var menuItems = await _menuItemService.GetMenuItems();
+            
+            ViewBag.IsAdmin = isAdmin;
             return View(menuItems);
         }
 

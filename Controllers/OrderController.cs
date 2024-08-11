@@ -135,6 +135,7 @@ namespace CaffeBar.Controllers
                 ModelState.AddModelError(string.Empty, "Order update failed.");
             }
 
+            ViewData["User"] = await GetUserAsync();
             ViewData["MenuItemOptions"] = new SelectList(await _orderService.GetMenuItemOptionsAsync(), "Value", "Text");
             ViewData["TableOptions"] = new SelectList(await _orderService.GetTableOptionsAsync(), "Value", "Text");
             return View(order);

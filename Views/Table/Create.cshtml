@@ -14,14 +14,9 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Seats" class="control-label"></label>
-                <input asp-for="Seats" class="form-control" />
+                <input asp-for="Seats" class="form-control w-50" min="1" max="20"/>
                 <span asp-validation-for="Seats" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsReserved" /> @Html.DisplayNameFor(model => model.IsReserved)
-                </label>
-            </div>
+            </div><br>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>

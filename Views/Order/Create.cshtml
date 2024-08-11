@@ -17,9 +17,9 @@
                 <label>User:<p style="color: aliceblue;">@user?.Name  @user?.Surname</p></label>
                 <br>
                 <label>Table:</label>
-                <select asp-for="TableId" class="form-control" asp-items="ViewBag.TableOptions"></select>
+                <select asp-for="TableId" class="form-control w-50" asp-items="ViewBag.TableOptions"></select>
                 <label>Item</label>
-                <select name="selectedMenuItems" class="form-control" asp-items="ViewBag.MenuItems"></select>
+                <select name="selectedMenuItems" class="form-control w-50" asp-items="ViewBag.MenuItems"></select>
                 <span asp-validation-for="TableId" class="text-danger"></span>
             </div>
             <br>
