@@ -12,37 +12,44 @@
     <div class="col-md-4">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <!-- Hidden field for Id -->
             <input type="hidden" asp-for="Id" />
             
+            <!-- Table selection -->
             <div class="form-group">
                 <label asp-for="TableId" class="control-label">Table</label>
                 <select asp-for="TableId" class="form-control" asp-items="ViewBag.TableOptions"></select>
                 <span asp-validation-for="TableId" class="text-danger"></span>
             </div>
             
+            <!-- User selection -->
             <div class="form-group">
                 <label asp-for="IdentityUserId" class="control-label">User</label>
-                <select asp-for="IdentityUserId" class="form-control" asp-items="ViewBag.IdentityUserId"></select>
+                <select asp-for="IdentityUserId" class="form-control" asp-items="ViewBag.IdentityUserOptions"></select>
                 <span asp-validation-for="IdentityUserId" class="text-danger"></span>
             </div>
             
+            <!-- Date input -->
             <div class="form-group">
                 <label asp-for="Date" class="control-label">Date</label>
                 <input asp-for="Date" class="form-control" type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
                 <span asp-validation-for="Date" class="text-danger"></span>
             </div>
             
+            <!-- Time selection -->
             <div class="form-group">
                 <label asp-for="Time" class="control-label">Time</label>
                 <select asp-for="Time" class="form-control">
                     @for (var time = TimeSpan.FromHours(10); time <= TimeSpan.FromHours(22); time = time.Add(TimeSpan.FromMinutes(30)))
                     {
-                        <option value="@time">@time.ToString(@"hh\:mm")</option>
+                        <option value="@time.ToString(@"hh\:mm")" @(time == Model.Time ? "selected" : "")>@time.ToString(@"hh\:mm")</option>
                     }
                 </select>
                 <span asp-validation-for="Time" class="text-danger"></span>
             </div>
             
+            <!-- Submit button -->
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>

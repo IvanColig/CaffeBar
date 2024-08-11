@@ -10,6 +10,6 @@ namespace CaffeBar.Services
         Task<bool> CreateReservationAsync(Reservation newReservation, string userId);
         Task<bool> UpdateReservationAsync(Reservation updatedReservation, string userId);
         Task<bool> DeleteReservationAsync(int id, string userId);
-        Task<IEnumerable<SelectListItem>> GetTableOptionsAsync();
+        Task<IEnumerable<SelectListItem>> GetTableOptionsAsync(DateTime date, TimeSpan time);
     }
 }

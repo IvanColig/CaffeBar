@@ -16,7 +16,11 @@ namespace CaffeBar.Services
 
         public async Task<IEnumerable<Reservation>> GetReservationsAsync()
         {
-            return await _context.Reservations.ToListAsync();
+            var reservations = await _context.Reservations
+                .Include(r => r.IdentityUser)
+                .ToListAsync();
+            
+            return reservations;
         }
 
         public async Task<Reservation?> GetReservationAsync(int id, string userId)
@@ -126,19 +130,20 @@ namespace CaffeBar.Services
             }
         }
 
-        public async Task<IEnumerable<SelectListItem>> GetTableOptionsAsync()
+        public async Task<IEnumerable<SelectListItem>> GetTableOptionsAsync(DateTime date, TimeSpan time)
         {
             var reservedTableIds = await _context.Reservations
+                .Where(r => r.Date == date && r.Time == time)
                 .Select(r => r.TableId)
                 .Distinct()
                 .ToListAsync();
-            
+
             return await _context.Tables
                 .Where(t => !reservedTableIds.Contains(t.Id))
                 .Select(t => new SelectListItem
                 {
                     Value = t.Id.ToString(),
-                    Text = $"Table {t.Id}" 
+                    Text = $"Table {t.Id}"
                 })
                 .ToListAsync();
         }

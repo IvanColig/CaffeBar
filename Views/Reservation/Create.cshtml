@@ -20,13 +20,13 @@
             
             <div class="form-group">
                 <label asp-for="Date">Date:</label>
-                <input asp-for="Date" class="form-control w-50" type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                <input asp-for="Date" class="form-control w-50" type="date" id="reservation-date" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
                 <span asp-validation-for="Date" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="Time">Time:</label>
-                <select asp-for="Time" class="form-control w-50" required>
+                <select asp-for="Time" class="form-control w-50" id="reservation-time" required>
                     @for (var hour = 10; hour <= 23; hour++)
                     {
                         for (var minute = 0; minute < 60; minute += 30)
@@ -44,7 +44,7 @@
 
             <div class="form-group">
                 <label asp-for="TableId">Table:</label>
-                <select asp-for="TableId" class="form-control w-50" asp-items="ViewBag.TableOptions"></select>
+                <select asp-for="TableId" class="form-control w-50" id="table-options" asp-items="ViewBag.TableOptions"></select>
                 <span asp-validation-for="TableId" class="text-danger"></span>
             </div><br>
             
@@ -61,4 +61,30 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        $(document).ready(function () {
+            function loadTableOptions() {
+                var date = $('#reservation-date').val();
+                var time = $('#reservation-time').val();
+
+                if (date && time) {
+                    $.getJSON('@Url.Action("GetAvailableTables", "Reservation")', { date: date, time: time }, function (data) {
+                        var tableOptions = $('#table-options');
+                        tableOptions.empty(); // Clear existing options
+                        $.each(data, function (index, item) {
+                            tableOptions.append($('<option></option>').val(item.value).text(item.text));
+                        });
+                    });
+                }
+            }
+
+            $('#reservation-date, #reservation-time').change(function () {
+                loadTableOptions();
+            });
+
+            // Initial load of tables if date and time are pre-selected (e.g., during form resubmission)
+            loadTableOptions();
+        });
+    </script>
 }

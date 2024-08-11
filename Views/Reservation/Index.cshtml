@@ -2,7 +2,6 @@
 
 @{
     ViewData["Title"] = "Index";
-    var user = ViewData["User"] as ApplicationUser;
 }
 
 <h1 class="form-clr">Reservations</h1>
@@ -33,13 +32,13 @@
         @foreach (var item in Model) {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.IdentityUser.Name) @Html.DisplayFor(modelItem => item.IdentityUser.Surname)
+                    @item.IdentityUser?.Name @item.IdentityUser?.Surname
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.TableId)
+                    Table @item.TableId
                 </td>
                 <td>
-                    @item.Date.ToString("yyyy-MM-dd")
+                    @item.Date.ToString("dd-MM-yyyy")
                 </td>
                 <td>
                     @item.Time.ToString(@"hh\:mm")
