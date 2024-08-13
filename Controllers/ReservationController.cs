@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CaffeBar.Controllers
 {
+    [Authorize]
     public class ReservationController : Controller
     {
         private readonly IReservationService _reservationService;

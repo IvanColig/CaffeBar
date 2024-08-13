@@ -18,6 +18,7 @@ namespace CaffeBar.Services
         {
             var reservations = await _context.Reservations
                 .Include(r => r.IdentityUser)
+                .OrderBy(r => r.Date)
                 .ToListAsync();
             
             return reservations;

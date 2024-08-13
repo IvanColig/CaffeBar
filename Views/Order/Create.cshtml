@@ -18,9 +18,8 @@
                 <br>
                 <label>Table:</label>
                 <select asp-for="TableId" class="form-control w-50" asp-items="ViewBag.TableOptions"></select>
-                <label>Item</label>
-                <select name="selectedMenuItems" class="form-control w-50" asp-items="ViewBag.MenuItems"></select>
-                <span asp-validation-for="TableId" class="text-danger"></span>
+                <br>
+                <a asp-controller="MenuItem" asp-action="Index" class="btn btn-primary btn-sm">Add item</a>
             </div>
             <br>
             <div class="form-group">
