@@ -1,14 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using CaffeBar.Data;
 using CaffeBar.Models;
 using CaffeBar.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace CaffeBar.Controllers
 {
@@ -30,13 +26,29 @@ namespace CaffeBar.Controllers
         }
 
         // GET: Reservation
+        [Authorize(Roles = "Admin,Waiter")]
         public async Task<IActionResult> Index()
         {
             var reservations = await _reservationService.GetReservationsAsync();
             return View(reservations);
         }
 
+        // GET: MyReservations
+        
+        public async Task<IActionResult> MyReservations()
+        {
+            var userId = await GetUserIdAsync();
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var reservations = await _reservationService.MyReservationsAsync(userId);
+            return View(reservations);
+        }
+
         // GET: Reservation/Details/5
+        [Authorize(Roles="Admin,Waiter")]
         public async Task<IActionResult> Details(int? id)
         {
             var userId = await GetUserIdAsync();
@@ -87,13 +99,13 @@ namespace CaffeBar.Controllers
                 var result = await _reservationService.CreateReservationAsync(reservation, userId);
                 if (result)
                 {
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(MyReservations));
                 }
                 ModelState.AddModelError(string.Empty, "Unable to create reservation. Please try again.");
             }
 
             ViewData["User"] = await _userManager.GetUserAsync(User);
-            ViewData["TableOptions"] = new List<SelectListItem>(); // Repopulate with empty list in case of error
+            ViewData["TableOptions"] = await PopulateTableOptions(); // Repopulate with actual table options in case of error
             return View(reservation);
         }
 
@@ -113,15 +125,16 @@ namespace CaffeBar.Controllers
                 return NotFound();
             }
 
+            ViewBag.TableOptions = await _reservationService.GetTableOptionsAsync(reservation.Date, reservation.Time);
             ViewData["User"] = await _userManager.GetUserAsync(User);
-            ViewData["TableOptions"] = new List<SelectListItem>(); // Initial empty list
             return View(reservation);
         }
+
 
         // POST: Reservation/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,TableId,Date,Time")] Reservation reservation)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Date,Time,TableId")] Reservation reservation)
         {
             var userId = await GetUserIdAsync();
 
@@ -142,7 +155,7 @@ namespace CaffeBar.Controllers
             }
 
             ViewData["User"] = await _userManager.GetUserAsync(User);
-            ViewData["TableOptions"] = new List<SelectListItem>(); // Repopulate with empty list in case of error
+            ViewBag.TableOptions = await PopulateTableOptions(reservation.TableId); // Repopulate with actual table options in case of error
             return View(reservation);
         }
 
@@ -165,7 +178,6 @@ namespace CaffeBar.Controllers
             return View(reservation);
         }
 
-        
         // POST: Reservation/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
@@ -181,12 +193,11 @@ namespace CaffeBar.Controllers
             var result = await _reservationService.DeleteReservationAsync(id, userId);
             if (result)
             {
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(MyReservations));
             }
 
             return NotFound();
         }
-
 
         // GET: Available Tables for Date and Time
         [HttpGet]
@@ -195,5 +206,27 @@ namespace CaffeBar.Controllers
             var tableOptions = await _reservationService.GetTableOptionsAsync(date, time);
             return Json(tableOptions);
         }
+
+        public async Task<IActionResult> GetAllTables()
+        {
+            var tables = await _reservationService.GetAllTablesAsync();
+            return Json(tables);
+        }
+
+        public async Task<SelectList> PopulateTableOptions(int? selectedTableId = null)
+        {
+            var tables = await _reservationService.GetAllTablesAsync();
+            
+            if (tables == null || !tables.Any())
+            {
+                tables = new List<Table>
+                {
+                    new Table { Id = 0, Seats = 0, IsReserved = false }
+                };
+            }
+
+            return new SelectList(tables, "Id", "Id", selectedTableId);
+        }
+
     }
 }

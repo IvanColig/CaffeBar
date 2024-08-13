@@ -4,63 +4,95 @@
     ViewData["Title"] = "Edit Reservation";
 }
 
-<h1>Edit Reservation</h1>
+<h1 class="form-clr">Edit Reservation</h1>
 
-<h4>Reservation</h4>
-<hr />
+<h4 class="form-clr">Reservation</h4>
+<hr class="form-clr"/>
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-4 form-clr">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             
-            <!-- Hidden field for Id -->
             <input type="hidden" asp-for="Id" />
-            
-            <!-- Table selection -->
+
             <div class="form-group">
-                <label asp-for="TableId" class="control-label">Table</label>
-                <select asp-for="TableId" class="form-control" asp-items="ViewBag.TableOptions"></select>
-                <span asp-validation-for="TableId" class="text-danger"></span>
+                <label class="control-label">User:</label><br>
+                <label class="control-label" style="color: aliceblue;">@Model.IdentityUser?.Name @Model.IdentityUser?.Surname</label>
             </div>
-            
-            <!-- User selection -->
-            <div class="form-group">
-                <label asp-for="IdentityUserId" class="control-label">User</label>
-                <select asp-for="IdentityUserId" class="form-control" asp-items="ViewBag.IdentityUserOptions"></select>
-                <span asp-validation-for="IdentityUserId" class="text-danger"></span>
-            </div>
-            
-            <!-- Date input -->
             <div class="form-group">
                 <label asp-for="Date" class="control-label">Date</label>
-                <input asp-for="Date" class="form-control" type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                <input asp-for="Date" class="form-control w-50" type="date" id="reservation-date" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
                 <span asp-validation-for="Date" class="text-danger"></span>
             </div>
-            
-            <!-- Time selection -->
             <div class="form-group">
-                <label asp-for="Time" class="control-label">Time</label>
-                <select asp-for="Time" class="form-control">
-                    @for (var time = TimeSpan.FromHours(10); time <= TimeSpan.FromHours(22); time = time.Add(TimeSpan.FromMinutes(30)))
+                <label asp-for="Time">Time:</label>
+                <select asp-for="Time" class="form-control w-50" id="reservation-time" required>
+                    @for (var hour = 10; hour <= 23; hour++)
                     {
-                        <option value="@time.ToString(@"hh\:mm")" @(time == Model.Time ? "selected" : "")>@time.ToString(@"hh\:mm")</option>
+                        for (var minute = 0; minute < 60; minute += 30)
+                        {
+                            var time = new TimeSpan(hour, minute, 0);
+                            if (time <= new TimeSpan(23, 0, 0))
+                            {
+                                <option value="@time">@time.ToString(@"hh\:mm")</option>
+                            }
+                        }
                     }
                 </select>
                 <span asp-validation-for="Time" class="text-danger"></span>
             </div>
-            
-            <!-- Submit button -->
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                <label asp-for="TableId" class="control-label">Table</label>
+                <select asp-for="TableId" class="form-control w-50" id="table-options">
+                    @if (ViewBag.TableOptions != null && ((IEnumerable<SelectListItem>)ViewBag.TableOptions).Any())
+                    {
+                        // Ostavite prazno, opcije će biti popunjene dinamički putem JavaScript-a
+                    }
+                    else
+                    {
+                        <option value="">No tables available</option>
+                    }
+                </select>
+                <span asp-validation-for="TableId" class="text-danger"></span>
             </div>
+
+            <br>
+            <input type="submit" value="Save" class="btn btn-primary" />
+            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
-</div>
-
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        $(document).ready(function () {
+            function loadTableOptions() {
+                var date = $('#reservation-date').val();
+                var time = $('#reservation-time').val();
+
+                if (date && time) {
+                    $.getJSON('@Url.Action("GetAvailableTables", "Reservation")', { date: date, time: time }, function (data) {
+                        var tableOptions = $('#table-options');
+                        tableOptions.empty(); // Clear existing options
+                        if (data.length === 0) {
+                            tableOptions.append('<option value="">No tables available</option>');
+                        } else {
+                            $.each(data, function (index, item) {
+                                tableOptions.append($('<option></option>').val(item.value).text(item.text));
+                            });
+                        }
+                    });
+                }
+            }
+
+            $('#reservation-date, #reservation-time').change(function () {
+                loadTableOptions();
+            });
+
+            // Initial load of tables if date and time are pre-selected (e.g., during form resubmission)
+            loadTableOptions();
+        });
+    </script>
 }

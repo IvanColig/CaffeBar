@@ -23,6 +23,15 @@ namespace CaffeBar.Services
             return reservations;
         }
 
+        public async Task<IEnumerable<Reservation>> MyReservationsAsync(string userId)
+        {
+            return await _context.Reservations
+                .Where(r => r.IdentityUserId == userId)
+                .OrderBy(r => r.Date)
+                .ToListAsync();
+        }
+
+
         public async Task<Reservation?> GetReservationAsync(int id, string userId)
         {
             return await _context.Reservations
@@ -146,6 +155,11 @@ namespace CaffeBar.Services
                     Text = $"Table {t.Id}"
                 })
                 .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Table>> GetAllTablesAsync()
+        {
+            return await _context.Tables.ToListAsync();
         }
     }
 }
