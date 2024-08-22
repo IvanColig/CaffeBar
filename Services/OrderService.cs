@@ -30,29 +30,58 @@ namespace CaffeBar.Services
                 .FirstOrDefaultAsync(o => o.Id == id && o.IdentityUserId == userId);
         }
 
-        public async Task<bool> CreateOrderAsync(Order newOrder, string userId)
+
+        public async Task<Order> CreateOrderAsync(string userId)
         {
-            newOrder.IdentityUserId = userId;
+            var order = new Order
+            {
+                IdentityUserId = userId,
+                TableId = 0
+            };
 
-            if (newOrder == null ||
-                newOrder.OrderItems == null ||
-                newOrder.OrderItems.Count == 0 ||
-                newOrder.TableId <= 0 ||
-                newOrder.IdentityUserId == null)
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+
+            return order;
+        }
+
+        public async Task AddToOrderAsync(int orderId, string userId, int menuItemId)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.IdentityUserId == userId);
+
+            if (order == null)
             {
-                return false;
+                return;
             }
 
-            try
+            var menuItem = await _context.MenuItems.FindAsync(menuItemId);
+
+            if (menuItem == null)
             {
-                _context.Orders.Add(newOrder);
-                await _context.SaveChangesAsync();
-                return true;
+                return;
             }
-            catch
+
+            if(order.OrderItems.Any(oi => oi.MenuItemId == menuItemId))
             {
-                return false;
+                var orderItem = order.OrderItems.FirstOrDefault(oi => oi.MenuItemId == menuItemId);
+                if (orderItem != null)
+                {
+                    orderItem.Quantity++;
+                }
             }
+            else
+            {
+                order.OrderItems.Add(new OrderItem
+                {
+                    OrderId = orderId,
+                    MenuItemId = menuItemId,
+                    Quantity = 1
+                });
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         public async Task<bool> UpdateOrderAsync(Order updatedOrder, string userId)

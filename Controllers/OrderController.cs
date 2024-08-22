@@ -1,11 +1,7 @@
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using CaffeBar.Services;
 using CaffeBar.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace CaffeBar.Controllers
 {
@@ -58,7 +54,6 @@ namespace CaffeBar.Controllers
         public async Task<IActionResult> Create()
         {
             ViewData["User"] = await GetUserAsync();
-            ViewData["MenuItemOptions"] = new SelectList(await _orderService.GetMenuItemOptionsAsync(), "Value", "Text");
             ViewData["TableOptions"] = new SelectList(await _orderService.GetTableOptionsAsync(), "Value", "Text");
             return View();
         }
@@ -66,7 +61,7 @@ namespace CaffeBar.Controllers
         // POST: Order/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,TableId")] Order order)
+        public async Task<IActionResult> Create([Bind("Id")] Order order)
         {
             var userId = (await GetUserAsync())?.Id;
 
@@ -77,8 +72,8 @@ namespace CaffeBar.Controllers
 
             if (ModelState.IsValid)
             {
-                var result = await _orderService.CreateOrderAsync(order, userId);
-                if (result)
+                var newOrder = await _orderService.CreateOrderAsync(userId);
+                if (newOrder != null)
                 {
                     return RedirectToAction(nameof(Index));
                 }
@@ -86,7 +81,6 @@ namespace CaffeBar.Controllers
             }
 
             ViewData["User"] = await GetUserAsync();
-            ViewData["MenuItemOptions"] = new SelectList(await _orderService.GetMenuItemOptionsAsync(), "Value", "Text");
             ViewData["TableOptions"] = new SelectList(await _orderService.GetTableOptionsAsync(), "Value", "Text");
             return View(order);
         }
@@ -108,7 +102,6 @@ namespace CaffeBar.Controllers
             }
 
             ViewData["User"] = await GetUserAsync();
-            ViewData["MenuItemOptions"] = new SelectList(await _orderService.GetMenuItemOptionsAsync(), "Value", "Text");
             ViewData["TableOptions"] = new SelectList(await _orderService.GetTableOptionsAsync(), "Value", "Text");
             return View(order);
         }
@@ -136,9 +129,21 @@ namespace CaffeBar.Controllers
             }
 
             ViewData["User"] = await GetUserAsync();
-            ViewData["MenuItemOptions"] = new SelectList(await _orderService.GetMenuItemOptionsAsync(), "Value", "Text");
             ViewData["TableOptions"] = new SelectList(await _orderService.GetTableOptionsAsync(), "Value", "Text");
             return View(order);
+        }
+
+        public async Task<IActionResult> AddToOrder(int orderId, int menuItemId)
+        {
+            var userId = (await GetUserAsync())?.Id;
+
+            if (userId == null)
+            {
+                return NotFound();
+            }
+
+            await _orderService.AddToOrderAsync(orderId, userId, menuItemId);
+            return RedirectToAction(nameof(Details), new { id = orderId });
         }
 
         // GET: Order/Delete/5

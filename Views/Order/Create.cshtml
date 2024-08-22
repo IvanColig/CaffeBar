@@ -1,38 +1,17 @@
 @model CaffeBar.Models.Order
 
 @{
-    ViewData["Title"] = "Create";
-    var user = ViewData["User"] as ApplicationUser;
+    ViewData["Title"] = "New Order";
 }
 
-<h1 class="form-clr">Create Order</h1>
+<h1>Create New Order</h1>
 
-<h4 class="form-clr">Order</h4>
-<hr/>
-<div class="row form-clr">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label>User:<p style="color: aliceblue;">@user?.Name  @user?.Surname</p></label>
-                <br>
-                <label>Table:</label>
-                <select asp-for="TableId" class="form-control w-50" asp-items="ViewBag.TableOptions"></select>
-                <br>
-                <a asp-controller="MenuItem" asp-action="Index" class="btn btn-primary btn-sm">Add item</a>
-            </div>
-            <br>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+<form asp-action="Create">
+    <div class="form-group">
+        <label class="control-label">Table</label>
+        <select asp-for="TableId" class="form-control w-25" asp-items="ViewBag.TableOptions"></select>
     </div>
-</div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

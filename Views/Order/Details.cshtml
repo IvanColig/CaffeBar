@@ -1,30 +1,24 @@
 @model CaffeBar.Models.Order
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Order Details";
 }
 
-<h1>Details</h1>
+<h1>Order @Model.Id</h1>
 
 <div>
-    <h4>Order</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IdentityUser)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IdentityUser.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TableId)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TableId)
-        </dd>
-    </dl>
+    <h4>Table: @Model.TableId</h4>
+    <h4>Items:</h4>
+    <ul>
+        @foreach (var item in Model.OrderItems)
+        {
+            <li>@item.MenuItem.Name - Quantity: @item.Quantity</li>
+        }
+    </ul>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+
+<p>
+    <a asp-action="AddToOrder" asp-route-orderId="@Model.Id" asp-route-menuItemId="1" class="btn btn-primary">Add Item</a>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</p>
